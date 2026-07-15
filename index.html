@@ -66,8 +66,8 @@
     }
 
     .logo-mark {
-      width: clamp(140px, 22vw, 220px);
-      height: clamp(140px, 22vw, 220px);
+      width: clamp(160px, 50vw, 220px);
+      height: clamp(160px, 50vw, 220px);
     }
 
     .logo-type {
@@ -90,7 +90,8 @@
       margin: 0.4em 0 0.2em;
     }
 
-    .scroll-hint {
+    .scroll-hint { display: none; }
+    @media (min-width: 600px) { .scroll-hint {
       position: absolute;
       bottom: 2.5rem;
       left: 50%;
@@ -111,7 +112,7 @@
       height: 36px;
       background: linear-gradient(to bottom, var(--sand), transparent);
       animation: pulse 2s ease-in-out infinite;
-    }
+    } }
     @keyframes pulse {
       0%,100% { opacity: 0.3; transform: scaleY(0.7) translateY(-4px); }
       50% { opacity: 0.9; transform: scaleY(1) translateY(0); }
@@ -241,7 +242,7 @@
   <!-- ── BUCKET SCENE ── -->
   <section class="bucket-scene" id="bucket-scene">
     <div class="bucket-sticky">
-      <canvas id="bucket-canvas" style="display:block; width:clamp(260px,38vw,420px);"></canvas>
+      <canvas id="bucket-canvas" style="display:block; width:clamp(280px,70vw,420px);"></canvas>
       <p id="bucket-label" style="
         margin-top:1.5rem; font-size:0.75rem; letter-spacing:0.18em;
         text-transform:uppercase; color:var(--muted); font-family:sans-serif;
@@ -536,6 +537,8 @@
     }
     drawFrame(0);
     window.addEventListener('scroll', onScroll, {passive:true});
+    // Mobile touch support
+    window.addEventListener('touchmove', onScroll, {passive:true});
 
     // ── PHRASE ─────────────────────────────────────────────────
     new IntersectionObserver(es => {
