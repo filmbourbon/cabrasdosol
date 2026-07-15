@@ -53,7 +53,7 @@
     content:'';
     position:fixed; inset:0;
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='g'%3E%3CfeTurbulence baseFrequency='.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.04'/%3E%3C/svg%3E");
-    pointer-events:none; z-index:9999; opacity:.55;
+    pointer-events:none; z-index:9999; opacity:.28;
   }
 
   /* ── NAV ─────────────────────────────────────── */
@@ -255,11 +255,11 @@
     letter-spacing: .05em;
   }
   .bourbon-logotype img {
-    height: 80px; width: auto; filter: brightness(0) invert(1) opacity(.85);
+    height: 80px; width: auto; opacity: .88;
   }
 
   /* ── APOIADORES ──────────────────────────────── */
-  .apoiadores { background: var(--sand); }
+  .apoiadores { background: #E8D3BB !important; }
   .apoiadores-grid {
     display: flex; align-items: center; justify-content: center;
     gap: clamp(2rem, 5vw, 5rem); flex-wrap: wrap;
@@ -570,7 +570,7 @@
 
     <!-- Lei Rouanet / MinC -->
     <div class="apoiador-item reveal">
-      <img src="assets/rouanet_strip.png" alt="Lei Rouanet · Ministério da Cultura · Governo Federal"/>
+      <img src="assets/rouanet_logos.png" alt="Lei Rouanet · Ministério da Cultura · Governo Federal" style="background:#fff;padding:8px;max-height:70px;width:auto;"/>
       <div class="apoiador-name">Ministério da Cultura<br>Lei de Incentivo à Cultura</div>
     </div>
 
@@ -591,7 +591,7 @@
 
     <!-- Korpus -->
     <div class="apoiador-item reveal delay-2">
-      <img src="assets/logo_korpus.png" alt="Academia Korpus"/>
+      <img src="assets/logo_korpus_dark.png" alt="Academia Korpus" style="max-height:55px;width:auto;"/>
       <div class="apoiador-name">Patrocinador</div>
     </div>
 
@@ -654,7 +654,7 @@
     <p style="margin-top:.25rem;">Campina Grande, Paraíba</p>
   </div>
   <div class="footer-rouanet">
-    <img src="assets/rouanet_strip.png" alt="Lei Rouanet · Ministério da Cultura"/>
+    <img src="assets/rouanet_logos.png" alt="Lei Rouanet · Ministério da Cultura"/>
   </div>
 </footer>
 
