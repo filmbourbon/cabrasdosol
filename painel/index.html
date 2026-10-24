@@ -1,0 +1,114 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Painel | Cabras do Sol</title>
+<script src="/config.js"></script>
+<style>
+:root{--paper:#F3E7D0;--paper-dk:#E7D4B4;--ink:#2B1810;--terra:#B3401F;--milk:#FFF9EE}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font:17px/1.45 Georgia,serif;padding:24px 16px 48px}
+main{max-width:860px;margin:0 auto}
+h1{font-size:28px;margin-bottom:4px}
+h2{font-size:21px;margin-bottom:8px}
+.box{border:2px solid var(--ink);background:var(--milk);padding:18px;margin-top:18px}
+p{margin-bottom:10px;text-wrap:pretty}
+button,.file{font:inherit;font-size:17px;background:var(--ink);color:var(--milk);border:2px solid var(--ink);padding:11px 16px;cursor:pointer;margin:4px 8px 4px 0;display:inline-block}
+button.t{background:var(--terra);border-color:var(--terra)}
+button[disabled]{opacity:.5;cursor:default}
+.file input{display:none}
+textarea{width:100%;font:13px/1.4 ui-monospace,Menlo,monospace;border:2px solid var(--ink);background:var(--paper);padding:10px;min-height:120px;margin-top:8px}
+.warn{border-left:4px solid var(--terra);padding:6px 10px;background:rgba(179,64,31,.07)}
+.st{min-height:24px;margin-top:8px}
+.st.err{color:var(--terra)}
+.tw{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid rgba(43,24,16,.25);white-space:nowrap}
+th{border-bottom:2px solid var(--ink)}
+</style></head><body><main>
+<h1>Painel do Cabras do Sol</h1>
+<p>Página interna. Não divulgue este endereço.</p>
+
+<section class="box">
+<h2>1. Chaves de criptografia</h2>
+<p>Faça isso uma única vez. O botão cria duas chaves: a pública vai para o site, a privada fica só com você.</p>
+<p class="warn">Guarde o arquivo da chave privada no seu computador e numa cópia no Google Drive. Nunca envie para o GitHub. Se perder, os contatos já recolhidos não podem mais ser lidos.</p>
+<button id="gen" type="button">Gerar chaves</button>
+<div id="pubwrap" hidden>
+<p style="margin-top:12px">A chave privada foi baixada. Agora copie o texto abaixo e cole no arquivo <b>config.js</b>, no lugar de <b>null</b>:</p>
+<textarea id="pub" readonly></textarea>
+<button id="copy" type="button">Copiar chave pública</button>
+</div>
+<p class="st" id="st1" role="status"></p>
+</section>
+
+<section class="box">
+<h2>2. Ler contatos</h2>
+<p>Entre com o Google da conta administradora e escolha o arquivo da chave privada.</p>
+<button id="login" type="button">Entrar com Google</button>
+<label class="file" id="kl">Escolher chave privada<input id="kf" type="file" accept=".json,application/json"></label>
+<button id="ler" class="t" type="button" disabled>Mostrar contatos</button>
+<button id="csv" type="button" disabled>Baixar planilha (CSV)</button>
+<p class="st" id="st2" role="status"></p>
+<div class="tw"><table id="tb" hidden><thead><tr><th>Nome</th><th>E-mail</th><th>Cidade</th><th>Origem</th><th>Data</th></tr></thead><tbody></tbody></table></div>
+</section>
+</main>
+<script type="module">
+const C=window.CDS_CONFIG||{};
+const READY=!!(C.firebase&&C.firebase.apiKey&&!/COLE/.test(C.firebase.apiKey));
+const BASE='https://www.gstatic.com/firebasejs/10.12.2/';
+const $=id=>document.getElementById(id);
+const ub=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+let FB=null,priv=null,user=null,rows=[];
+function st(id,t,err){$(id).textContent=t;$(id).className='st'+(err?' err':'')}
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function upd(){$('ler').disabled=!(user&&priv)}
+
+$('gen').onclick=async()=>{
+ if(C.publicKey&&!confirm('Já existe uma chave pública no config.js. Gerar novas chaves impede ler os contatos recolhidos com a chave antiga. Continuar?'))return;
+ const kp=await crypto.subtle.generateKey({name:'RSA-OAEP',modulusLength:3072,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['encrypt','decrypt']);
+ const pj=await crypto.subtle.exportKey('jwk',kp.privateKey);
+ const pub=await crypto.subtle.exportKey('jwk',kp.publicKey);
+ dl('chave-privada-cabrasdosol.json',JSON.stringify(pj),'application/json');
+ $('pub').value=JSON.stringify({kty:pub.kty,n:pub.n,e:pub.e,alg:pub.alg,ext:true,key_ops:['encrypt']});
+ $('pubwrap').hidden=false;st('st1','Chaves geradas.');
+};
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('pub').value);st('st1','Chave pública copiada.')}catch(e){$('pub').select();st('st1','Selecione o texto e copie manualmente.')}};
+
+$('kf').onchange=async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{const j=JSON.parse(await f.text());priv=await crypto.subtle.importKey('jwk',j,{name:'RSA-OAEP',hash:'SHA-256'},false,['decrypt']);$('kl').firstChild.textContent='Chave carregada';st('st2','Chave privada carregada.')}
+ catch(err){priv=null;st('st2','Esse arquivo não é a chave privada correta.',true)}
+ upd()};
+
+async function load(){if(FB)return FB;const[a,f,u]=await Promise.all([import(BASE+'firebase-app.js'),import(BASE+'firebase-firestore.js'),import(BASE+'firebase-auth.js')]);const app=a.initializeApp(C.firebase);FB={db:f.getFirestore(app),f,auth:u.getAuth(app),u};return FB}
+$('login').onclick=async()=>{
+ if(!READY){st('st2','Preencha o config.js com os dados do Firebase primeiro.',true);return}
+ try{const {auth,u}=await load();const r=await u.signInWithPopup(auth,new u.GoogleAuthProvider());user=r.user;$('login').textContent=user.email;st('st2','Conectado como '+user.email+'.')}
+ catch(err){console.warn(err);st('st2','Não foi possível entrar. Tente de novo.',true)}
+ upd()};
+
+async function open(doc){
+ const raw=await crypto.subtle.decrypt({name:'RSA-OAEP'},priv,ub(doc.k));
+ const k=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+ const d=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(doc.iv)},k,ub(doc.d));
+ return JSON.parse(new TextDecoder().decode(d))}
+
+$('ler').onclick=async()=>{
+ st('st2','Buscando...');
+ try{
+  const {db,f}=FB;const snap=await f.getDocs(f.collection(db,'contatos'));
+  const out=[],seen=new Set();let bad=0;
+  for(const s of snap.docs){try{const x=await open(s.data());const key=(x.email||'').toLowerCase();if(seen.has(key))continue;seen.add(key);out.push(x)}catch(e){bad++}}
+  out.sort((a,b)=>(a.quando||'').localeCompare(b.quando||''));rows=out;
+  const tb=$('tb').tBodies[0];tb.innerHTML='';
+  for(const r of out){const tr=tb.insertRow();[r.nome,r.email,r.cidade,r.origem,(r.quando||'').slice(0,10).split('-').reverse().join('/')].forEach(v=>{tr.insertCell().textContent=v||''})}
+  $('tb').hidden=false;$('csv').disabled=!out.length;
+  st('st2',out.length+' contato(s).'+(bad?' '+bad+' não puderam ser lidos com esta chave.':''),!!bad);
+ }catch(err){console.warn(err);st('st2',err&&err.code==='permission-denied'?'Esta conta Google não tem acesso aos contatos.':'Erro ao buscar contatos.',true)}
+};
+$('csv').onclick=()=>{
+ const q=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+ const lines=[['Nome','E-mail','Cidade','Origem','Data'].map(q).join(';')].concat(rows.map(r=>[r.nome,r.email,r.cidade,r.origem,r.quando].map(q).join(';')));
+ dl('contatos-cabrasdosol.csv','﻿'+lines.join('\r\n'),'text/csv;charset=utf-8')};
+</script>
+</body></html>
